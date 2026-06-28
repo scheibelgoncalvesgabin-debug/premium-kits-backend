@@ -92,7 +92,6 @@ router.post('/:serverId/apikey/regenerate', requireServerAccess, async (req, res
 export default router;
 
 // Discord webhook
-import { requireServerAccess } from '../middleware/auth.js';
 
 router.post('/:serverId/webhook/discord', requireAuth, requireServerAccess, async (req, res) => {
   const { webhookUrl, events = ['kit_given'] } = req.body;
