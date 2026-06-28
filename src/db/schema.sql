@@ -43,8 +43,9 @@ CREATE TABLE IF NOT EXISTS kits (
   --  requiresPreviewAccept, placeholderCheck: {placeholder,operator,value}}
   -- Actions: what happens on receive
   actions      JSONB DEFAULT '{}',
-  -- {onReceiveCommand, broadcast, sound, soundVolume, soundPitch,
-  --  particle, particleCount, particleColor, customMessage}
+  -- {onReceiveCommand, broadcast, sound, soundVolume, soundPitch, particle, particleCount, particleColor, customMessage}
+  tags         JSONB DEFAULT '{}',
+  -- {auto-join, auto-region, weight, no-random, mystery}
   priority     INT DEFAULT 0,
   created_by   TEXT,
   created_at   TIMESTAMPTZ DEFAULT NOW(),

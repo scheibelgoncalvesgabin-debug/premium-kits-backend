@@ -35,6 +35,7 @@ router.get('/kits', async (req, res) => {
         access:     parse(row.access),
         conditions: parse(row.conditions),
         actions:    parse(row.actions),
+        tags:       parse(row.tags),
         priority:   row.priority,
       };
     });
@@ -57,6 +58,27 @@ router.post('/kit-given', async (req, res) => {
       kitId, playerName, playerUuid,
       ts: Date.now()
     });
+    // Discord webhook
+    const srv = await query('SELECT config FROM servers WHERE id=$1',[req.server.id]);
+    const cfg = srv.rows[0]?.config;
+    const webhook = cfg?.discordWebhook;
+    if (webhook?.url && webhook.events?.includes('kit_given')) {
+      fetch(webhook.url, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          embeds:[{
+            title:'🎁 Kit donné',
+            color:0x6366f1,
+            fields:[
+              {name:'Joueur',value:playerName||playerUuid,inline:true},
+              {name:'Kit',value:kitId,inline:true},
+            ],
+            timestamp: new Date().toISOString(),
+          }]
+        })
+      }).catch(()=>{});
+    }
     res.json({ ok: true });
   } catch { res.json({ ok: true }); }
 });

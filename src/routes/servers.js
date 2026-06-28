@@ -90,3 +90,17 @@ router.post('/:serverId/apikey/regenerate', requireServerAccess, async (req, res
 });
 
 export default router;
+
+// Discord webhook
+import { requireServerAccess } from '../middleware/auth.js';
+
+router.post('/:serverId/webhook/discord', requireAuth, requireServerAccess, async (req, res) => {
+  const { webhookUrl, events = ['kit_given'] } = req.body;
+  try {
+    await query(
+      `UPDATE servers SET config = jsonb_set(COALESCE(config,'{}'), '{discordWebhook}', $2::jsonb) WHERE id=$1`,
+      [req.params.serverId, JSON.stringify({ url: webhookUrl, events })]
+    );
+    res.json({ message: 'Webhook saved' });
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Failed' }); }
+});

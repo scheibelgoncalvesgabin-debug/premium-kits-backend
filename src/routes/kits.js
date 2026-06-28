@@ -38,7 +38,7 @@ router.put('/:kitId', async (req, res) => {
   const {
     name, description, enabled = true, icon = 'CHEST',
     items = {}, access = { type: 'EVERYONE' },
-    conditions = {}, actions = {}, priority = 0
+    conditions = {}, actions = {}, priority = 0, tags = {}
   } = req.body;
 
   if (!name?.trim()) return res.status(400).json({ error: 'Kit name required' });
@@ -49,8 +49,8 @@ router.put('/:kitId', async (req, res) => {
 
   try {
     const r = await query(
-      `INSERT INTO kits (server_id, kit_id, name, description, enabled, icon, items, access, conditions, actions, priority, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+      `INSERT INTO kits (server_id, kit_id, name, description, enabled, icon, items, access, conditions, actions, tags, priority, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
        ON CONFLICT (server_id, kit_id) DO UPDATE SET
          name        = EXCLUDED.name,
          description = EXCLUDED.description,
@@ -60,6 +60,7 @@ router.put('/:kitId', async (req, res) => {
          access      = EXCLUDED.access,
          conditions  = EXCLUDED.conditions,
          actions     = EXCLUDED.actions,
+         tags        = EXCLUDED.tags,
          priority    = EXCLUDED.priority,
          updated_at  = NOW()
        RETURNING *`,
@@ -71,6 +72,7 @@ router.put('/:kitId', async (req, res) => {
         JSON.stringify(access),
         JSON.stringify(conditions),
         JSON.stringify(actions),
+        JSON.stringify(tags),
         priority,
         req.user.username
       ]
@@ -159,6 +161,7 @@ function parseKit(row) {
     access:     parse(row.access),
     conditions: parse(row.conditions),
     actions:    parse(row.actions),
+    tags:       parse(row.tags),
   };
 }
 
