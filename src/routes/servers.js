@@ -9,11 +9,12 @@ router.use(requireAuth);
 router.get('/', async (req, res) => {
   try {
     const r = await query(
-      `SELECT s.*, 
+      `SELECT s.*,
         (SELECT COUNT(*) FROM kits WHERE server_id = s.id AND enabled = true)::int AS kit_count,
         (SELECT COUNT(*) FROM kit_gives WHERE server_id = s.id)::int AS total_gives
        FROM servers s
        WHERE s.user_id = $1
+          OR s.id IN (SELECT server_id FROM team_members WHERE user_id = $1)
        ORDER BY s.created_at DESC`,
       [req.user.userId]
     );
@@ -89,12 +90,9 @@ router.post('/:serverId/apikey/regenerate', requireServerAccess, async (req, res
   } catch { res.status(500).json({ error: 'Failed' }); }
 });
 
-export default router;
-
 // Discord webhook
-
 router.post('/:serverId/webhook/discord', requireAuth, requireServerAccess, async (req, res) => {
-  const { webhookUrl, events = ['kit_given'] } = req.body;
+  const { webhookUrl, events = ["kit_given"] } = req.body;
   try {
     await query(
       `UPDATE servers SET config = jsonb_set(COALESCE(config,'{}'), '{discordWebhook}', $2::jsonb) WHERE id=$1`,
@@ -103,3 +101,5 @@ router.post('/:serverId/webhook/discord', requireAuth, requireServerAccess, asyn
     res.json({ message: 'Webhook saved' });
   } catch(e) { console.error(e); res.status(500).json({ error: 'Failed' }); }
 });
+
+export default router;
